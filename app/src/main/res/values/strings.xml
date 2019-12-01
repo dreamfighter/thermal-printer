@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Bluetooth</string>
+    <string name="default_printer_name">printer001</string>
+
+    <string name="pref_printer_name">pref_printer_name</string>
+
+    <string name="title_printer_name">Printer Name</string>
+
+    <string name="message_device_notfound">Devices Not Found!</string>
+    <string name="action_settings">Settings</string>
+
+</resources>

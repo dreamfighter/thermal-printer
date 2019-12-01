@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="General">
+
+        <ListPreference
+            android:defaultValue="@string/default_printer_name"
+            android:key="@string/pref_printer_name"
+            android:title="@string/title_printer_name" />
+
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
