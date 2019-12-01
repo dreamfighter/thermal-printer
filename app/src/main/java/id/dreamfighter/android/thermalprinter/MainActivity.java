@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        /*
         switch (item.getItemId()){
             case R.id.action_settings:{
                 getSupportFragmentManager().beginTransaction().replace(R.id.frame,new SettingsPreference()).commit();
@@ -39,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
+        */
         return super.onOptionsItemSelected(item);
     }
 }
