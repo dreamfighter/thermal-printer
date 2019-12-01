@@ -88,7 +88,7 @@ public class Epp200PrintBuilder {
             return temp.append(center(line.substring(length-1),length)).toString();
         }
     }
-    public Epp200PrintBuilder table(List<Object> entities){
+    public Epp200PrintBuilder table(List<? extends Object> entities){
         List<Map<String,String>> rows = new ArrayList<>();
         List<Map<String,String>> cols = new ArrayList<>();
         int i = 0;
