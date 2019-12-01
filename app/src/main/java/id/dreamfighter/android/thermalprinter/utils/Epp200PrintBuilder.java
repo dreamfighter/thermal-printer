@@ -3,6 +3,9 @@ package id.dreamfighter.android.thermalprinter.utils;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +98,7 @@ public class Epp200PrintBuilder {
 
         for(Object o:entities) {
             Method[] m = o.getClass().getDeclaredMethods();
+
             Map<String,String> row = new HashMap<String,String>();
             for(Method method:m) {
                 TableColumn column = method
@@ -105,6 +109,7 @@ public class Epp200PrintBuilder {
                         col.put("key",column.key());
                         col.put("name",column.name());
                         col.put("align",column.align());
+                        col.put("index",String.valueOf(column.index()));
                         cols.add(col);
                     }
                     try {
@@ -119,6 +124,12 @@ public class Epp200PrintBuilder {
             rows.add(row);
             i++;
         }
+        Collections.sort(cols, new Comparator<Map<String, String>>() {
+            @Override
+            public int compare(Map<String, String> stringStringMap, Map<String, String> t1) {
+                return stringStringMap.get("index").compareTo(t1.get("index"));
+            }
+        });
         return table(rows,cols);
     }
 

@@ -11,4 +11,5 @@ public @interface TableColumn{
     String key() default "";
     String name() default "";
     String align() default "left";
+    int index() default 0;
 }
