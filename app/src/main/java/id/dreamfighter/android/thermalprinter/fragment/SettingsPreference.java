@@ -68,7 +68,14 @@ public class SettingsPreference extends PreferenceFragmentCompat {
         final SharedPreferences sh = getPreferenceManager().getSharedPreferences() ;
 
         final ListPreference basePref = findPreference(getString(R.string.pref_printer_name));
-        basePref.setSummary(sh.getString(getString(R.string.pref_printer_name), getString(R.string.default_printer_name)));
+
+        if(devices.length==0) {
+            devices = new CharSequence[1];
+            devices[0] = "No Printer Device";
+            basePref.setSummary("No Printer Device");
+        }else{
+            basePref.setSummary(sh.getString(getString(R.string.pref_printer_name), getString(R.string.default_printer_name)));
+        }
 
         basePref.setEntries(devices);
         basePref.setEntryValues(devices);
