@@ -25,7 +25,11 @@ public class SettingsPreference extends PreferenceFragmentCompat {
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preference_main, rootKey);
+        initPrinterSettings();
 
+    }
+
+    public void initPrinterSettings(){
         CharSequence[] devices = new CharSequence[0];
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -63,35 +67,6 @@ public class SettingsPreference extends PreferenceFragmentCompat {
 
         final SharedPreferences sh = getPreferenceManager().getSharedPreferences() ;
 
-
-        //Pref1
-
-        /*
-        final Preference stylePref = findPreference(getString(R.string.pref_api_url));
-        stylePref.setSummary(sh.getString(getString(R.string.pref_api_url), getString(R.string.default_api_url)));
-        stylePref.setOnPreferenceChangeListener((preference, newValue) -> {
-                    stylePref.setSummary(String.valueOf(newValue));
-                    return true;
-                }
-        );
-
-        final Preference keyPref = findPreference(getString(R.string.pref_api_key));
-        keyPref.setSummary(sh.getString(getString(R.string.pref_api_key), getString(R.string.default_api_key)));
-        keyPref.setOnPreferenceChangeListener((preference, newValue) -> {
-            keyPref.setSummary(String.valueOf(newValue));
-                    return true;
-                }
-        );
-
-        final Preference secretPref = findPreference(getString(R.string.pref_api_secret));
-        secretPref.setSummary(sh.getString(getString(R.string.pref_api_secret), getString(R.string.default_api_secret)));
-        secretPref.setOnPreferenceChangeListener((preference, newValue) -> {
-            secretPref.setSummary(String.valueOf(newValue));
-                    return true;
-                }
-        );
-        */
-
         final ListPreference basePref = findPreference(getString(R.string.pref_printer_name));
         basePref.setSummary(sh.getString(getString(R.string.pref_printer_name), getString(R.string.default_printer_name)));
 
@@ -99,7 +74,7 @@ public class SettingsPreference extends PreferenceFragmentCompat {
         basePref.setEntryValues(devices);
 
         basePref.setOnPreferenceChangeListener((preference, newValue) -> {
-            basePref.setSummary(String.valueOf(newValue));
+                    basePref.setSummary(String.valueOf(newValue));
                     return true;
                 }
         );
