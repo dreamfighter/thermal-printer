@@ -151,21 +151,29 @@ public class PrinterUtils {
         }
     }
 
-    public void printPhoto(Bitmap bmp) {
-        InitPrinter();
-        try {
-            if(bmp!=null){
-                byte[] command = PrintBitmapUtils.decodeBitmap(bmp);
-                outputStream.write(ESC_ALIGN_CENTER);
-                outputStream.write(command);
-                outputStream.close();
-                socket.close();
-            }else{
-                Log.e("Print Photo error", "the file isn't exists");
+    public void printBitmap(Bitmap bmp) {
+        if(bmp!=null){
+
+            byte[] buffer = PrintBitmapUtils.decodeBitmap(bmp);
+            byte[] PrintHeader = { (byte) 0xAA, 0x55,2,0 };
+            PrintHeader[3]=(byte) buffer.length;
+            InitPrinter();
+            if(PrintHeader.length>128){
+                Log.d("PRINTER","Value is more than 128 size");
+                Toast.makeText(context, "Value is more than 128 size", Toast.LENGTH_LONG).show();
+            }else {
+                try {
+                    outputStream.write(ESC_ALIGN_CENTER);
+                    outputStream.write(buffer);
+                    outputStream.close();
+                    socket.close();
+                } catch(Exception ex) {
+                    ex.printStackTrace();
+                    Toast.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
+                }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e("PrintTools", "the file isn't exists");
+        }else{
+            Log.e("Print Photo error", "the bitmap isn't exists");
         }
     }
 
