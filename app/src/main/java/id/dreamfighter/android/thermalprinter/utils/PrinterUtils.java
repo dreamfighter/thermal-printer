@@ -152,11 +152,14 @@ public class PrinterUtils {
     }
 
     public void printPhoto(Bitmap bmp) {
+        InitPrinter();
         try {
             if(bmp!=null){
                 byte[] command = PrintBitmapUtils.decodeBitmap(bmp);
                 outputStream.write(ESC_ALIGN_CENTER);
                 outputStream.write(command);
+                outputStream.close();
+                socket.close();
             }else{
                 Log.e("Print Photo error", "the file isn't exists");
             }
