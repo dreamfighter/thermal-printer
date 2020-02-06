@@ -1,52 +1,89 @@
 package id.dreamfighter.android.thermalprinter.utils;
 
+import android.app.Activity;
+import android.bluetooth.BluetoothSocket;
+import android.util.Log;
+
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
-import id.dreamfighter.android.thermalprinter.TableColumn;
+import id.dreamfighter.android.thermalprinter.enums.TableColumn;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.observables.ConnectableObservable;
 
 public class Epp200PrintBuilder {
     private StringBuffer sb = new StringBuffer();
     private final int LENGTH = 33;
+    private PrinterUtils printerUtils;
+    private OutputStream outputStream;
+    private ConnectableObservable<OutputStream> observable;
 
     public static Epp200PrintBuilder Build() {
         return new Epp200PrintBuilder();
+    }
+
+    public static Epp200PrintBuilder Print(Activity activity) {
+        Epp200PrintBuilder builder = new Epp200PrintBuilder();
+        builder.printerUtils = new PrinterUtils();
+        //builder.outputStream = builder.printerUtils.ini
+        builder.observable = builder.printerUtils.publish();
+
+        return builder;
     }
 
     public String format(){
         return sb.toString();
     }
 
-    public Epp200PrintBuilder append(String line) {
+    public Epp200PrintBuilder append(final String line) {
         sb.append(line);
+        observable.subscribe(bluetoothSocket -> {
+            bluetoothSocket.write(line.getBytes());
+        });
         return this;
     }
 
     public Epp200PrintBuilder newline() {
         sb.append("\n");
+
+        observable.subscribe(bluetoothSocket -> {
+            bluetoothSocket.write(PrinterCommands.FEED_LINE);
+        });
         return this;
     }
 
     public Epp200PrintBuilder right(String line){
         sb.append(right(line,LENGTH));
+
         return this;
     }
 
     private String right(String line,int length){
         StringBuffer temp = new StringBuffer();
         if(line.length()<length) {
-            return String.format("%1$" + (length-1) + "s", line);
+            String r = String.format("%1$" + (length-1) + "s", line);
+            observable.subscribe(bluetoothSocket -> {
+                bluetoothSocket.write(r.getBytes());
+            });
+            return r;
         }else{
             String l = line.substring(0,length-1);
             temp.append(l).append("\n");
-            return temp.append(right(line.substring(length-1),length)).toString();
+            String r = temp.append(right(line.substring(length-1),length)).toString();
+            observable.subscribe(bluetoothSocket -> {
+                bluetoothSocket.write(r.getBytes());
+            });
+            return r;
         }
     }
 
@@ -58,11 +95,19 @@ public class Epp200PrintBuilder {
     private String left(String line,int length){
         StringBuffer temp = new StringBuffer();
         if(line.trim().length()<length) {
-            return String.format("%-" + (length-1) + "s", line.trim());
+            String r =  String.format("%-" + (length-1) + "s", line.trim());
+            observable.subscribe(bluetoothSocket -> {
+                bluetoothSocket.write(r.getBytes());
+            });
+            return r;
         }else{
             String l = line.substring(0,length-1);
             temp.append(l).append("\n");
-            return temp.append(left(line.substring(length-1),length)).toString();
+            String r = temp.append(left(line.substring(length-1),length)).toString();
+            observable.subscribe(bluetoothSocket -> {
+                bluetoothSocket.write(r.getBytes());
+            });
+            return r;
         }
     }
 
@@ -82,13 +127,24 @@ public class Epp200PrintBuilder {
             String end = line.substring(div-1);
 
             temp.append(String.format("%-" + ((length/2)+1) + "s", end));
+            observable.subscribe(bluetoothSocket -> {
+                bluetoothSocket.write(temp.toString().getBytes());
+            });
             return temp.toString();
         }else if(line.length()<length){
-            return String.format("%1$" + (length-1) + "s", line);
+            String r = String.format("%1$" + (length-1) + "s", line);
+            observable.subscribe(bluetoothSocket -> {
+                bluetoothSocket.write(r.getBytes());
+            });
+            return r;
         }else{
             String l = line.substring(0,length-1);
             temp.append(l).append("\n");
-            return temp.append(center(line.substring(length-1),length)).toString();
+            String r = temp.append(center(line.substring(length-1),length)).toString();
+            observable.subscribe(bluetoothSocket -> {
+                bluetoothSocket.write(r.getBytes());
+            });
+            return r;
         }
     }
     public Epp200PrintBuilder table(List<? extends Object> entities){
@@ -154,6 +210,9 @@ public class Epp200PrintBuilder {
 
         if(columnNames.size()>3){
             sb.append("TO MANY COLUMN");
+            observable.subscribe(bluetoothSocket -> {
+                bluetoothSocket.write("TO MANY COLUMN".getBytes());
+            });
         }else{
             int sum = 0;
             int cols = LENGTH / colLength.size();
@@ -167,7 +226,10 @@ public class Epp200PrintBuilder {
 
             //row(m,new HashMap<>(),colPecentage,columnNames);
             for(Map<String,String> m:list) {
-                row(m,new HashMap<>(),colPecentage,columnNames);
+                String r = row(m,new HashMap<>(),colPecentage,columnNames);
+                observable.subscribe(bluetoothSocket -> {
+                    bluetoothSocket.write(r.getBytes());
+                });
             }
         }
 
@@ -228,5 +290,13 @@ public class Epp200PrintBuilder {
             return row(tmpLine,format,percentage,columnNames);
         }
         return "";
+    }
+
+    public boolean print(){
+        observable.subscribe(outputStream1 -> {
+            outputStream1.flush();
+        });
+        observable.connect();
+        return true;
     }
 }

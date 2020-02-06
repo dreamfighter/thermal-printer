@@ -1,4 +1,4 @@
-package id.dreamfighter.android.thermalprinter;
+package id.dreamfighter.android.thermalprinter.enums;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

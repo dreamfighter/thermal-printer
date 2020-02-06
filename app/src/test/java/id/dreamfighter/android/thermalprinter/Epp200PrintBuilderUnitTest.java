@@ -40,7 +40,17 @@ public class Epp200PrintBuilderUnitTest {
                 "in the dark                     ", builder.format());
     }
 
-
+    @Test
+    public void subcriber_isCorrect() throws Exception {
+        Epp200PrintBuilder builder = Epp200PrintBuilder.Print(null)
+                .append("1").append("2").append("3").newline();
+        assertEquals("I want to eat nasi goreng center\n" +
+                "           in the dark          \n" +
+                "I want to eat nasi goreng center\n" +
+                "                     in the dark\n" +
+                "I want to eat nasi goreng center\n" +
+                "in the dark                     ", builder.format());
+    }
 
     @Test
     public void table_isCorrect() throws Exception {
