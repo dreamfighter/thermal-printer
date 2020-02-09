@@ -75,16 +75,17 @@ public class SettingsPreference extends PreferenceFragmentCompat {
             basePref.setSummary("No Printer Device");
         }else{
             basePref.setSummary(sh.getString(getString(R.string.pref_printer_name), getString(R.string.default_printer_name)));
+            basePref.setEntries(devices);
+            basePref.setEntryValues(devices);
+
+            basePref.setOnPreferenceChangeListener((preference, newValue) -> {
+                        basePref.setSummary(String.valueOf(newValue));
+                        return true;
+                    }
+            );
         }
 
-        basePref.setEntries(devices);
-        basePref.setEntryValues(devices);
 
-        basePref.setOnPreferenceChangeListener((preference, newValue) -> {
-                    basePref.setSummary(String.valueOf(newValue));
-                    return true;
-                }
-        );
     }
 
 

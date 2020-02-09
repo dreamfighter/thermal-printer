@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -44,7 +45,6 @@ public class PrinterUtils extends Observable<OutputStream> {
     private volatile boolean stopWorker;
     private Observer<? super OutputStream> observer;
 
-    private static BluetoothSocket btsocket;
 
     public static PrinterUtils getInstance(Activity context){
         if(INSTANCE==null){
@@ -66,14 +66,16 @@ public class PrinterUtils extends Observable<OutputStream> {
 
 
                 }
-
-                btsocket = DeviceList.getSocket();
             }catch (Exception e){
                 e.printStackTrace();
             }
         }
 
         return INSTANCE;
+    }
+
+    public Activity getContext() {
+        return context;
     }
 
     @Override
@@ -99,7 +101,7 @@ public class PrinterUtils extends Observable<OutputStream> {
         byte[] buffer = finalContent.getBytes();
         byte[] PrintHeader = { (byte) 0xAA, 0x55,2,0 };
         PrintHeader[3]=(byte) buffer.length;
-        InitPrinter();
+        initPrinter();
         if(PrintHeader.length>128){
             Log.d("PRINTER","Value is more than 128 size");
             Toast.makeText(context, "Value is more than 128 size", Toast.LENGTH_LONG).show();
@@ -122,7 +124,7 @@ public class PrinterUtils extends Observable<OutputStream> {
             byte[] buffer = PrintBitmapUtils.decodeBitmap(bmp);
             byte[] PrintHeader = { (byte) 0xAA, 0x55,2,0 };
             PrintHeader[3]=(byte) buffer.length;
-            InitPrinter();
+            initPrinter();
             if(PrintHeader.length>128){
                 Log.d("PRINTER","Value is more than 128 size");
                 Toast.makeText(context, "Value is more than 128 size", Toast.LENGTH_LONG).show();
@@ -142,7 +144,7 @@ public class PrinterUtils extends Observable<OutputStream> {
         }
     }
 
-    private void InitPrinter() {
+    public void initPrinter() {
 
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -155,43 +157,41 @@ public class PrinterUtils extends Observable<OutputStream> {
             Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
 
             if(pairedDevices.size() > 0) {
-                for(BluetoothDevice device : pairedDevices)
-                {
+                for(BluetoothDevice device : pairedDevices){
 
                     if(device.getName().equals(PreferenceManager
                             .getDefaultSharedPreferences(context)
                             .getString(context.getString(R.string.pref_printer_name), context.getString(R.string.default_printer_name)
-                    ))) //Note, you will need to change this to match the name of your device
-                    {
+                    ))){ //Note, you will need to change this to match the name of your device
+
                         bluetoothDevice = device;
                         break;
                     }
                 }
 
-                Thread connectThread = new Thread(new Runnable() {
+                Thread connectThread = new Thread(() -> {
+                    try {
+                        boolean gotuuid = bluetoothDevice
+                                .fetchUuidsWithSdp();
+                        UUID uuid = bluetoothDevice.getUuids()[0]
+                                .getUuid();
+                        socket = bluetoothDevice
+                                .createRfcommSocketToServiceRecord(uuid);
 
-                    @Override
-                    public void run() {
+                        socket.connect();
+                        Log.d("ON NEXT","socket->"+socket);
+                        observer.onNext(socket.getOutputStream());
+                        //inputStream = socket.getInputStream();
+                        //beginListenForData();
+                        //emitter.onNext("Test");
+                    } catch (IOException ex) {
+                        //runOnUiThread(socketErrorRunnable);
                         try {
-                            boolean gotuuid = bluetoothDevice
-                                    .fetchUuidsWithSdp();
-                            UUID uuid = bluetoothDevice.getUuids()[0]
-                                    .getUuid();
-                            socket = bluetoothDevice
-                                    .createRfcommSocketToServiceRecord(uuid);
-
-                            socket.connect();
-                            observer.onNext(socket.getOutputStream());
-                            //emitter.onNext("Test");
-                        } catch (IOException ex) {
-                            //runOnUiThread(socketErrorRunnable);
-                            try {
-                                socket.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            socket = null;
+                            socket.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
+                        socket = null;
                     }
                 });
 
@@ -221,7 +221,7 @@ public class PrinterUtils extends Observable<OutputStream> {
 
     private void beginListenForData() {
         try {
-            final Handler handler = new Handler();
+            final Handler handler = new Handler(Looper.getMainLooper());
 
             // this is the ASCII code for a newline character
             final byte delimiter = 10;
@@ -263,7 +263,7 @@ public class PrinterUtils extends Observable<OutputStream> {
                                         // tell the user data were sent to bluetooth printer device
                                         handler.post(new Runnable() {
                                             public void run() {
-                                                Log.d("e", data);
+                                                Log.d("DATA_FROM_PRINTER", data);
                                             }
                                         });
 
@@ -293,6 +293,10 @@ public class PrinterUtils extends Observable<OutputStream> {
         try {
             if (outputStream != null) {
                 outputStream.close();
+            }
+            if(inputStream!=null){
+                inputStream.close();
+                workerThread.interrupt();
             }
             if (socket != null && socket.isConnected()) {
                 socket.close();
